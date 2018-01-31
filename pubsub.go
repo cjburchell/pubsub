@@ -45,12 +45,12 @@ func SubscribeChan(subject string, channel chan []byte) Subscription {
 		subject: subject,
 		channel: channel,
 	}
-	if session, ok := sessions[subject]; ok {
-		session.subscriptions = append(session.subscriptions, sub)
+	if s, ok := sessions[subject]; ok {
+		s.subscriptions = append(s.subscriptions, sub)
 	} else {
-		var session session
-		session.subscriptions = append(session.subscriptions, sub)
-		sessions[subject] = &session
+		var s session
+		s.subscriptions = append(s.subscriptions, sub)
+		sessions[subject] = &s
 	}
 
 	return sub
@@ -62,12 +62,12 @@ func Subscribe(subject string, handler MsgHandler) Subscription {
 		subject: subject,
 		handler: handler,
 	}
-	if session, ok := sessions[subject]; ok {
-		session.subscriptions = append(session.subscriptions, sub)
+	if s, ok := sessions[subject]; ok {
+		s.subscriptions = append(s.subscriptions, sub)
 	} else {
-		var session session
-		session.subscriptions = append(session.subscriptions, sub)
-		sessions[subject] = &session
+		var s session
+		s.subscriptions = append(s.subscriptions, sub)
+		sessions[subject] = &s
 	}
 
 	return sub
