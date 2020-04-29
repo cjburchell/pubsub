@@ -4,7 +4,7 @@ pipeline{
             PROJECT_PATH = "/go/src/github.com/cjburchell/pubsub"
     }
 
-    stages{
+    stages {
         stage('Setup') {
             steps {
                 script{
@@ -14,19 +14,50 @@ pipeline{
              checkout scm
              }
          }
+        stage('Static Analysis') {
+            parallel {
+                stage('Vet') {
+                    agent {
+                        docker {
+                            image 'cjburchell/goci:1.13'
+                            args '-v $WORKSPACE:$PROJECT_PATH'
+                        }
+                    }
+                    steps {
+                        script{
+                                sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
+                                def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
-        stage('Lint') {
-            steps {
-                script{
-                docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
-                        docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
+                                sh """go get github.com/nats-io/go-nats"""
+                                sh """go get github.com/pkg/errors"""
+
+                                sh """go vet ${paths}"""
+
+                                def checkVet = scanForIssues tool: [$class: 'GoVet']
+                                publishIssues issues:[checkVet]
+                        }
+                    }
+                }
+
+                stage('Lint') {
+                    agent {
+                        docker {
+                            image 'cjburchell/goci:1.13'
+                            args '-v $WORKSPACE:$PROJECT_PATH'
+                        }
+                    }
+                    steps {
+                        script{
                             sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                             def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
-                            sh """go tool vet ${paths}"""
+                            sh """go get github.com/nats-io/go-nats"""
+                            sh """go get github.com/pkg/errors"""
+
                             sh """golint ${paths}"""
 
-                            warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                            def checkLint = scanForIssues tool: [$class: 'GoLint']
+                            publishIssues issues:[checkLint]
                         }
                     }
                 }
@@ -52,5 +83,4 @@ pipeline{
               }
         }
     }
-
 }
