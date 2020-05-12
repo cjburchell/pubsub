@@ -19,14 +19,15 @@ pipeline{
                 stage('Vet') {
                     agent {
                         docker {
-                            image 'cjburchell/goci:1.13'
+                            image 'cjburchell/goci:1.14'
                             args '-v $WORKSPACE:$PROJECT_PATH'
                         }
                     }
                     steps {
                         script{
+                                sh """go get cloud.google.com/go/pubsub"""
+                                sh """go get google.golang.org/api/option"""
                                 sh """go get github.com/nats-io/go-nats"""
-                                sh """go get github.com/pkg/errors"""
 
                                 sh """go vet ./..."""
 
@@ -39,21 +40,42 @@ pipeline{
                 stage('Lint') {
                     agent {
                         docker {
-                            image 'cjburchell/goci:1.13'
+                            image 'cjburchell/goci:1.14'
                             args '-v $WORKSPACE:$PROJECT_PATH'
                         }
                     }
                     steps {
                         script{
-                            sh """go get github.com/nats-io/go-nats"""
-                            sh """go get github.com/pkg/errors"""
-
                             sh """golint ./..."""
 
                             def checkLint = scanForIssues tool: [$class: 'GoLint']
                             publishIssues issues:[checkLint]
                         }
                     }
+                }
+            }
+        }
+        stage('Tests') {
+            agent {
+                docker {
+                    image 'cjburchell/goci:1.14'
+                    args '-v $WORKSPACE:$PROJECT_PATH'
+                }
+            }
+            steps {
+                script{
+                    sh """go get cloud.google.com/go/pubsub"""
+                    sh """go get google.golang.org/api/option"""
+                    sh """go get github.com/nats-io/go-nats"""
+
+                    def testResults = sh returnStdout: true, script:"""go test -v ./..."""
+                    writeFile file: 'test_results.txt', text: testResults
+                    sh """go2xunit -input test_results.txt > tests.xml"""
+                    sh """cd ${PROJECT_PATH} && ls"""
+
+                    archiveArtifacts 'test_results.txt'
+                    archiveArtifacts 'tests.xml'
+                    junit allowEmptyResults: true, testResults: 'tests.xml'
                 }
             }
         }
