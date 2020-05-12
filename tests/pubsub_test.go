@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"github.com/cjburchell/pubsub"
 	"github.com/cjburchell/pubsub/tests/mocks"
 	"github.com/golang/mock/gomock"
@@ -10,19 +11,21 @@ import (
 
 
 func TestPublishMemory(t *testing.T) {
+
+	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
 	m := mocks.NewMockISettings(ctrl)
 	m.EXPECT().Get(gomock.Eq("PubSubProvider"), gomock.Any()).Return("memory").AnyTimes()
 
-	p, err := pubsub.Create(m)
+	p, err := pubsub.Create(ctx, m)
 	assert.Nil(t, err)
 	c := make(chan []byte)
-	sub, err := p.SubscribeChan("test", c)
+	sub, err := p.SubscribeChan(ctx,"test", c)
 	assert.Nil(t, err)
 	assert.NotNil(t, sub)
 
-	err = p.Publish("test", []byte("this is a test"))
+	err = p.Publish(ctx,"test", []byte("this is a test"))
 	assert.Nil(t, err)
 
 	err = sub.Close()
@@ -32,12 +35,13 @@ func TestPublishMemory(t *testing.T) {
 }
 
 func TestBadProvider(t *testing.T) {
+	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
 	m := mocks.NewMockISettings(ctrl)
 	m.EXPECT().Get(gomock.Eq("PubSubProvider"), gomock.Any()).Return("test").AnyTimes()
 
-	p, err := pubsub.Create(m)
+	p, err := pubsub.Create(ctx, m)
 	assert.NotNil(t, err)
 	assert.Nil(t, p)
 }

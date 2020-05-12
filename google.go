@@ -7,7 +7,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func createGoogleProvider(settings ISettings) (provider, error) {
+func createGoogleProvider(ctx context.Context, settings ISettings) (provider, error) {
 	projectID := settings.Get("googlePubSubProjectId", "")
 	if projectID == "" {
 		return nil, fmt.Errorf("missing setting googlePubSubProjectId")
@@ -23,7 +23,7 @@ func createGoogleProvider(settings ISettings) (provider, error) {
 		return nil, fmt.Errorf("missing setting googlePubSubscriptionSuffix")
 	}
 
-	client, err := pubsub.NewClient(context.Background(), projectID, option.WithCredentialsFile(credentialsFile))
+	client, err := pubsub.NewClient(ctx, projectID, option.WithCredentialsFile(credentialsFile))
 	if err != nil {
 		return nil, err
 	}
@@ -45,9 +45,8 @@ type googleProvider struct {
 	client             *pubsub.Client
 }
 
-func (g*googleProvider) Publish(topicID string, msg []byte) error {
+func (g*googleProvider) Publish(ctx context.Context,topicID string, msg []byte) error {
 	topic := g.client.Topic(topicID)
-	ctx:=context.Background()
 	if ok, err := topic.Exists(ctx); !ok || err != nil {
 		if err != nil{
 			return err
@@ -115,8 +114,7 @@ func (g*googleProvider) getSubscription(ctx context.Context, subscriptionName st
 	return sub, nil
 }
 
-func (g*googleProvider) Subscribe(topicID string, handler MsgHandler) (ISubscription, error) {
-	ctx := context.Background()
+func (g*googleProvider) Subscribe(ctx context.Context, topicID string, handler MsgHandler) (ISubscription, error) {
 	topic, err := g.getTopic(ctx, topicID)
 	if err != nil {
 		return nil, err
@@ -128,12 +126,13 @@ func (g*googleProvider) Subscribe(topicID string, handler MsgHandler) (ISubscrip
 		return nil, err
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+	newContext, cancel := context.WithCancel(ctx)
+	err = sub.Receive(newContext, func(ctx context.Context, m *pubsub.Message) {
 		handler(m.Data)
 		m.Ack()
 	})
 	if err != nil {
+		defer cancel()
 		return nil, err
 	}
 

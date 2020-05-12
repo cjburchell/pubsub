@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"context"
 	"github.com/nats-io/go-nats"
 )
 
@@ -34,11 +35,11 @@ func (n natsSubscription) Close() error {
 	return n.natsSub.Unsubscribe()
 }
 
-func (n nProvider) Publish(topic string, msg []byte) error {
+func (n nProvider) Publish(_ context.Context,topic string, msg []byte) error {
 	return n.natsConn.Publish(topic, msg)
 }
 
-func (n nProvider) Subscribe(topic string, handler MsgHandler) (ISubscription, error) {
+func (n nProvider) Subscribe(_ context.Context, topic string, handler MsgHandler) (ISubscription, error) {
 	sub, err := n.natsConn.Subscribe(topic, func(msg *nats.Msg) {
 		handler(msg.Data)
 	})

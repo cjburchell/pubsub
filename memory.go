@@ -1,5 +1,7 @@
 package pubsub
 
+import "context"
+
 // createMemoryProvider create the provider
 func createMemoryProvider() (provider, error){
 	return &memProvider{make(map[string]*session, 0)}, nil
@@ -9,7 +11,7 @@ type memProvider struct {
 	sessions map[string]*session
 }
 
-func (m*memProvider) Publish(topic string, msg []byte) error {
+func (m*memProvider) Publish(_ context.Context, topic string, msg []byte) error {
 	if session, ok := m.sessions[topic]; ok {
 		for _, sub := range session.subscriptions {
 			go sub.handler(msg)
@@ -19,7 +21,7 @@ func (m*memProvider) Publish(topic string, msg []byte) error {
 	return nil
 }
 
-func (m*memProvider) Subscribe(topic string, handler MsgHandler) (ISubscription, error) {
+func (m*memProvider) Subscribe(_ context.Context, topic string, handler MsgHandler) (ISubscription, error) {
 	var sub = &subscription{
 		subject: topic,
 		handler: handler,

@@ -1,12 +1,13 @@
 package pubsub
 
 import (
+	"context"
 	"fmt"
 )
 
 type provider interface {
-	Publish(topic string, msg []byte) error
-	Subscribe(topic string, handler MsgHandler) (ISubscription, error)
+	Publish(ctx context.Context, topic string, msg []byte) error
+	Subscribe(ctx context.Context, topic string, handler MsgHandler) (ISubscription, error)
 }
 
 type providerType string
@@ -17,10 +18,10 @@ const (
 	memoryProvider               providerType = "memory"
 )
 
-func getProvider(providerType providerType, settings ISettings) (provider, error){
+func getProvider(ctx context.Context, providerType providerType, settings ISettings) (provider, error){
 	switch providerType {
 	case googlePubSubProvider:
-		return createGoogleProvider(settings)
+		return createGoogleProvider(ctx, settings)
 	case natsProvider:
 		return createNatsProvider(settings)
 	case memoryProvider:
