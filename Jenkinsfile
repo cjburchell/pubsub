@@ -28,6 +28,8 @@ pipeline{
                                 sh """go get cloud.google.com/go/pubsub"""
                                 sh """go get google.golang.org/api/option"""
                                 sh """go get github.com/nats-io/go-nats"""
+                                sh """go get github.com/golang/mock/gomock"""
+                                sh """go get github.com/stretchr/testify/assert"""
 
                                 sh """go vet ./..."""
 
@@ -67,6 +69,8 @@ pipeline{
                     sh """go get cloud.google.com/go/pubsub"""
                     sh """go get google.golang.org/api/option"""
                     sh """go get github.com/nats-io/go-nats"""
+                    sh """go get github.com/golang/mock/gomock"""
+                    sh """go get github.com/stretchr/testify/assert"""
 
                     def testResults = sh returnStdout: true, script:"""go test -v ./..."""
                     writeFile file: 'test_results.txt', text: testResults
