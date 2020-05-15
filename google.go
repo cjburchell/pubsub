@@ -1,25 +1,26 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
+
+	"cloud.google.com/go/pubsub"
 	"google.golang.org/api/option"
 )
 
-func createGoogleProvider(ctx context.Context, settings ISettings) (provider, error) {
-	projectID := settings.Get("googlePubSubProjectId", "")
+func createGoogleProvider(ctx context.Context, settings GoogleProviderSettings) (provider, error) {
+	projectID := settings.ProjectID
 	if projectID == "" {
 		return nil, fmt.Errorf("missing setting googlePubSubProjectId")
 	}
 
-	credentialsFile := settings.Get("googlePubSubCredentialsFile", "")
+	credentialsFile := settings.CredentialsFile
 	if credentialsFile == "" {
 		return nil, fmt.Errorf("missing setting googlePubSubCredentialsFile")
 	}
 
-	subscriptionSuffix := settings.Get("googlePubSubscriptionSuffix", "")
-	if credentialsFile == "" {
+	subscriptionSuffix := settings.SubscriptionSuffix
+	if subscriptionSuffix == "" {
 		return nil, fmt.Errorf("missing setting googlePubSubscriptionSuffix")
 	}
 
@@ -32,8 +33,8 @@ func createGoogleProvider(ctx context.Context, settings ISettings) (provider, er
 		client:             client,
 		projectID:          projectID,
 		subscriptionSuffix: subscriptionSuffix,
-		createTopic:        settings.GetBool("googlePubSubCreateTopic", false),
-		createSubscription: settings.GetBool("googlePubSubCreateSubscription", false),
+		createTopic:        settings.CreateTopic,
+		createSubscription: settings.CreateSubscription,
 	}, nil
 }
 
@@ -45,10 +46,10 @@ type googleProvider struct {
 	client             *pubsub.Client
 }
 
-func (g*googleProvider) Publish(ctx context.Context,topicID string, msg []byte) error {
+func (g *googleProvider) Publish(ctx context.Context, topicID string, msg []byte) error {
 	topic := g.client.Topic(topicID)
 	if ok, err := topic.Exists(ctx); !ok || err != nil {
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		return fmt.Errorf("missing topic %s", topicID)
@@ -63,12 +64,12 @@ type googleSubscription struct {
 	cancel context.CancelFunc
 }
 
-func (g*googleSubscription) Close() error {
+func (g *googleSubscription) Close() error {
 	g.cancel()
 	return nil
 }
 
-func (g*googleProvider) getTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
+func (g *googleProvider) getTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
 	topic := g.client.Topic(topicID)
 	found, err := topic.Exists(ctx)
 	if err != nil {
@@ -90,7 +91,7 @@ func (g*googleProvider) getTopic(ctx context.Context, topicID string) (*pubsub.T
 	return topic, nil
 }
 
-func (g*googleProvider) getSubscription(ctx context.Context, subscriptionName string, topic *pubsub.Topic) (*pubsub.Subscription, error) {
+func (g *googleProvider) getSubscription(ctx context.Context, subscriptionName string, topic *pubsub.Topic) (*pubsub.Subscription, error) {
 	sub := g.client.Subscription(subscriptionName)
 
 	found, err := sub.Exists(ctx)
@@ -114,7 +115,7 @@ func (g*googleProvider) getSubscription(ctx context.Context, subscriptionName st
 	return sub, nil
 }
 
-func (g*googleProvider) Subscribe(ctx context.Context, topicID string, handler MsgHandler) (ISubscription, error) {
+func (g *googleProvider) Subscribe(ctx context.Context, topicID string, handler MsgHandler) (ISubscription, error) {
 	topic, err := g.getTopic(ctx, topicID)
 	if err != nil {
 		return nil, err
@@ -138,5 +139,3 @@ func (g*googleProvider) Subscribe(ctx context.Context, topicID string, handler M
 
 	return &googleSubscription{cancel: cancel}, nil
 }
-
-

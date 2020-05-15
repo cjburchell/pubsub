@@ -2,7 +2,13 @@ pipeline{
     agent any
     environment {
             PROJECT_PATH = "/go/src/github.com/cjburchell/pubsub"
+            VERSION = "v2.1.${env.BUILD_NUMBER}"
+            repository = "github.com/cjburchell/pubsub.git"
     }
+
+    parameters {
+            booleanParam(name: 'Release', defaultValue: false, description: 'Should tag release?')
+        }
 
     stages {
         stage('Setup') {
@@ -68,6 +74,18 @@ pipeline{
                     archiveArtifacts 'test_results.txt'
                     archiveArtifacts 'tests.xml'
                     junit allowEmptyResults: true, testResults: 'tests.xml'
+                }
+            }
+        }
+        stage('Release') {
+            when { expression { params.Release } }
+            steps {
+                 script {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+                        sh """git tag ${VERSION}"""
+                        sh """git push https://${env.GIT_USERNAME}:${env.GIT_PASSWORD}@${env.repository} ${VERSION}"""
+                    }
+
                 }
             }
         }

@@ -2,20 +2,16 @@ package pubsub
 
 import (
 	"context"
+
 	"github.com/nats-io/nats.go"
 )
 
 // createNatsProvider create the provider
-func createNatsProvider(settings ISettings) (provider, error) {
-	url := settings.Get("pubSubNatsUrl", "tcp://nats:4222")
-	token := settings.Get("pubSubNatsToken", "token")
-	user := settings.Get("pubSubNatsUser", "admin")
-	password := settings.Get("pubSubNatsPassword", "password")
-
+func createNatsProvider(settings NatsProviderSettings) (provider, error) {
 	natsConn, err := nats.Connect(
-		url,
-		nats.Token(token),
-		nats.UserInfo(user, password))
+		settings.URL,
+		nats.Token(settings.Token),
+		nats.UserInfo(settings.User, settings.Password))
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +31,7 @@ func (n natsSubscription) Close() error {
 	return n.natsSub.Unsubscribe()
 }
 
-func (n nProvider) Publish(_ context.Context,topic string, msg []byte) error {
+func (n nProvider) Publish(_ context.Context, topic string, msg []byte) error {
 	return n.natsConn.Publish(topic, msg)
 }
 
@@ -44,10 +40,9 @@ func (n nProvider) Subscribe(_ context.Context, topic string, handler MsgHandler
 		handler(msg.Data)
 	})
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	return natsSubscription{natsSub: sub}, nil
 }
-

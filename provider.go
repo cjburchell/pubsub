@@ -10,23 +10,28 @@ type provider interface {
 	Subscribe(ctx context.Context, topic string, handler MsgHandler) (ISubscription, error)
 }
 
-type providerType string
+//ProviderType the type of provider
+type ProviderType string
 
 const (
-	googlePubSubProvider providerType = "googlePubSub"
-	natsProvider                 providerType = "nats"
-	memoryProvider               providerType = "memory"
+	// GooglePubSubProvider type
+	GooglePubSubProvider ProviderType = "googlePubSub"
+	// NatsProvider type
+	NatsProvider ProviderType = "nats"
+	// MemoryProvider type
+	MemoryProvider ProviderType = "memory"
 )
 
-func getProvider(ctx context.Context, providerType providerType, settings ISettings) (provider, error){
-	switch providerType {
-	case googlePubSubProvider:
-		return createGoogleProvider(ctx, settings)
-	case natsProvider:
-		return createNatsProvider(settings)
-	case memoryProvider:
+func getProvider(ctx context.Context, settings Settings) (provider, error) {
+	switch settings.Provider {
+
+	case GooglePubSubProvider:
+		return createGoogleProvider(ctx, settings.Google)
+	case NatsProvider:
+		return createNatsProvider(settings.Nats)
+	case MemoryProvider:
 		return createMemoryProvider()
 	}
 
-	return nil, fmt.Errorf("unknown povider %s", providerType)
+	return nil, fmt.Errorf("unknown povider %s", settings.Provider)
 }
