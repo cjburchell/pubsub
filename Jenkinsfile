@@ -2,7 +2,7 @@ pipeline{
     agent any
     environment {
             PROJECT_PATH = "/go/src/github.com/cjburchell/pubsub"
-            VERSION = "v2.1.${env.BUILD_NUMBER}"
+            VERSION = "v1.2.${env.BUILD_NUMBER}"
             repository = "github.com/cjburchell/pubsub.git"
     }
 
