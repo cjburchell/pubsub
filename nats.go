@@ -8,10 +8,17 @@ import (
 
 // createNatsProvider create the provider
 func createNatsProvider(settings NatsProviderSettings) (provider, error) {
+	var loginOption nats.Option
+	if settings.Token != ""{
+		loginOption = nats.Token(settings.Token)
+	} else if settings.User != "" &&  settings.Password != "" {
+		loginOption = nats.UserInfo(settings.User, settings.Password)
+	}
+
 	natsConn, err := nats.Connect(
 		settings.URL,
-		nats.Token(settings.Token),
-		nats.UserInfo(settings.User, settings.Password))
+		loginOption)
+
 	if err != nil {
 		return nil, err
 	}

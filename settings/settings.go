@@ -17,9 +17,9 @@ func Get(settings settings.ISettings) pubsub.Settings {
 func getNatsSettings(settings settings.ISettings) pubsub.NatsProviderSettings {
 	return pubsub.NatsProviderSettings{
 		URL:      settings.Get("Url", "tcp://nats:4222"),
-		Token:    settings.Get("Token", "token"),
-		User:     settings.Get("User", "admin"),
-		Password: settings.Get("Password", "password"),
+		Token:    settings.Get("Token", ""),
+		User:     settings.Get("User", ""),
+		Password: settings.Get("Password", ""),
 	}
 }
 
