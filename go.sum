@@ -38,6 +38,7 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cjburchell/settings-go v1.1.18 h1:uTkE5cLzjalIh8srA+49gLkZrNsZ094zBmzoDcaDSZI=
 github.com/cjburchell/settings-go v1.1.18/go.mod h1:9o325q7tR3br/nNdeYLYFMx8McAy/TWSA9TxsIDGrAU=
+github.com/cjburchell/settings-go v1.1.19/go.mod h1:9o325q7tR3br/nNdeYLYFMx8McAy/TWSA9TxsIDGrAU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
